@@ -1,0 +1,10 @@
+.chart-title {
+    font-size: 24px;
+    font-weight: bold;
+    fill: #555;
+}
+
+.y path {
+    display: none;
+}
+
