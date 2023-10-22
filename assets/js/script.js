@@ -12,9 +12,9 @@ d3.csv("../data/data.csv").then(function(data) {
 function drawChart(data) {
 
 // Define the dimensions and scales for the chart
-const width = 600;
-const height = 475;
-const margin = {top: 20, right: 20, bottom: 60, left: 40};
+const width = 750;
+const height = 575;
+const margin = {top: 40, right: 20, bottom: 80, left: 40};
 
 const xScale = d3.scaleTime()
     .domain([new Date(2018, 0), new Date(2023, 0)])
@@ -25,17 +25,18 @@ const yScale = d3.scaleLinear()
     .range([height - margin.bottom, margin.top]);
 
 // Create an SVG container
-const svg = d3.select("body")
+const svg = d3.select("#chartContainer")
     .append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .attr("class", "bg-white border");
 
 // Add the title
 svg.append("text")
     .attr("x", margin.left)    
     .attr("y", margin.top)
     .attr("text-anchor", "start")
-    .attr("class", "chart-title")
+    .attr("class", "chart-title font-poppins text-2x1")
     .text("GDP per Capita (CAD)");
 
 // Add the axes

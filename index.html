@@ -5,13 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canadata</title>
-    <link rel="stylesheet" href="./assets/css/styles.css">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
     <link rel="icon" href="./assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./dist/output.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
 </head>
 
 <body>
-    <script src="./assets/js/script.js"></script>
+    <div class="h-screen flex flex-col">
+        <header class="bg-white shadow-md py-4">
+            <div class="container mx-auto text-center">
+                <h1 class="text-2x1 font-poppins">Canadata</h1>
+            </div>
+        </header>
+
+        <div id="chartContainer" class="flex-grow flex items-center justify-center">
+            <script src="./assets/js/script.js"></script>
+        </div>
+    </div>
+
 </body>
 
 </html>
