@@ -639,6 +639,10 @@ video {
   stroke: currentColor;
 }
 
+.stroke-gray-400 {
+  stroke: #9ca3af;
+}
+
 .p-2 {
   padding: 0.5rem;
 }
@@ -665,9 +669,9 @@ video {
   line-height: 2rem;
 }
 
-.text-3xl {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
 
 .text-gray-800 {

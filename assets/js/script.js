@@ -1,7 +1,7 @@
 // Define the dimensions and scales for the chart
-const margin = {top: 40, right: 80, bottom: 60, left: 60};
-const width = 700 - margin.left - margin.right;
-const height = 500 - margin.top - margin.bottom;
+const margin = {top: 40, right: 40, bottom: 60, left: 60};
+const width = 800 - margin.left - margin.right;
+const height = 1600 - margin.top - margin.bottom;
 
 // Define the currency format
 const currencyFormat = d3.format("$,")
@@ -15,9 +15,6 @@ const svg = d3.select("#chartContainer")
     .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-// Create the tooltip
-const tooltip = d3.select("#tooltip");
-
 // Load and parse the CSV data
 d3.csv("../data/data.csv").then(data => {
     const parseYear = d3.timeParse("%Y");
@@ -28,8 +25,6 @@ d3.csv("../data/data.csv").then(data => {
 
     // Create series from the data
     const series = createSeries(data);
-
-    console.log(data)
 
     // Create chart with the series
     drawChart(data, series);
@@ -51,24 +46,37 @@ function createSeries(data) {
             }))
         };
     });
-    console.log(series)
-
     return series;
 }
 
+// This function draws the chart
 function drawChart(data, series) {
+    // Compute the max label width so the chart width can be adjusted to make room
+    const maxLabelWidth = d3.max(series, s => {
+        const tempText = svg.append("text")
+            .attr("class", "label text-xs font-poppins")
+            .text(s.name);
+
+        const bbox = tempText.node().getBBox();
+        tempText.remove();
+
+        return bbox.width;
+    });
+    
+    // Adjust graph width to make sure the labels have room
+    const extraPadding = 10; // Accounts for a bit of padding on the inside of the box
+    const lineOffset = 20; // Determines the horizontal distance of the leader lines
+    const lineOffsetMargin = 4; // Determines the distance between the last data point and the leader line start, and the distance between the leader line end and the label
+    const newGraphWidth = width - maxLabelWidth - lineOffset - lineOffsetMargin - extraPadding;
+    
     // Compute scale domains
     const xDomain = d3.extent(series[0].values, d => d.date);
-
-    const yDomain = [
-        0,
-        d3.max(series, s => d3.max(s.values, d => d.value))
-    ];
+    const yDomain = [0, d3.max(series, s => d3.max(s.values, d => d.value))];
 
     // Define scales
     const xScale = d3.scaleTime()
         .domain(xDomain)
-        .range([0, width]);
+        .range([0, newGraphWidth]);
 
     const yScale = d3.scaleLinear()
         .domain(yDomain)
@@ -76,6 +84,42 @@ function drawChart(data, series) {
 
     // Create a color scale
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    
+    
+
+    const labelPositions = series.map(s => yScale(s.values[s.values.length - 1].value));
+
+    // This function groups any overlapping labels
+    const groupedLabels = [];
+    labelPositions.forEach(y => {
+        let foundGroup = false;
+        for (const group of groupedLabels) {
+            if (isOverlapping(group[group.length - 1], y)) {
+                group.push(y);
+                foundGroup = true;
+                break;
+            }
+        }
+        if (!foundGroup) {
+            groupedLabels.push([y]);
+        }
+    });
+    
+    groupedLabels.forEach(group => {
+        const groupMid = (group[0] + group[group.length - 1]) / 2;
+        
+        let newY;
+        if (groupMid < 0) newY = group[group.length - 1] - groupMid;
+        else if (groupMid > height) newY = group[0] + (height - groupMid);
+        else newY = groupMid;
+
+        group.forEach((y, index) => {
+            const offset = (newY - groupMid) + index * 15;
+            group[index] = y + offset;
+        });
+    });
+
+    const adjustedLabelPositions = groupedLabels.flat();
 
     // Add the title
     svg.append("text")
@@ -121,6 +165,17 @@ function drawChart(data, series) {
         .x(d => xScale(d.date))
         .y(d => yScale(d.value));
 
+    // Define label constants
+    const labelSpacing = 10; // Defines the minimum vertical space between labels
+    const placedLabels = []; // Keep track of all perviously placed labels' y positions
+    
+    // Sort the series based on the last value in ascending order
+    series.sort((a, b) => {
+        const aValue = a.values[a.values.length - 1].value;
+        const bValue = b.values[b.values.length - 1].value;
+        return aValue - bValue;
+    });
+
     // Plot each series
     series.forEach((s, index) => {
         svg.append("path")
@@ -129,7 +184,63 @@ function drawChart(data, series) {
             .attr("stroke", colorScale(index))
             .attr("stroke-width", 1.5)
             .attr("d", lineGenerator);
+        
+        const lastDataPoint = s.values[s.values.length - 1];
+        const originalYPosition = yScale(lastDataPoint.value);
+        let yPosition = yScale(lastDataPoint.value);
+
+        // Check if the label overlaps with already placed labels
+        while(isOverlapping(yPosition, placedLabels, labelSpacing)) {
+            yPosition -= labelSpacing; // Adjust position upwards
+        }
+        
+        // Draw the leader lines 
+        // Horizontal Segment 1
+        svg.append("line")
+            .attr("x1", lineOffsetMargin + xScale(lastDataPoint.date))
+            .attr("y1", originalYPosition)
+            .attr("x2", lineOffsetMargin + xScale(lastDataPoint.date) + lineOffset/2)
+            .attr("y2", originalYPosition)
+            .attr("class", "stroke-gray-400")
+            .attr("stroke-width", 0.5);
+
+        // Vertical segment
+        svg.append("line")
+            .attr("x1", lineOffsetMargin + xScale(lastDataPoint.date) + lineOffset/2)
+            .attr("y1", originalYPosition)
+            .attr("x2", lineOffsetMargin + xScale(lastDataPoint.date) + lineOffset/2)
+            .attr("y2", yPosition)
+            .attr("class", "stroke-gray-400")
+            .attr("stroke-width", 0.5);
+
+        // Horizontal Segment 2
+        svg.append("line")
+            .attr("x1", lineOffsetMargin + xScale(lastDataPoint.date) + lineOffset/2)
+            .attr("y1", yPosition)
+            .attr("x2", lineOffsetMargin + xScale(lastDataPoint.date) + lineOffset)
+            .attr("y2", yPosition)
+            .attr("class", "stroke-gray-400")
+            .attr("stroke-width", 0.5);
+
+        svg.append("text")
+                .attr("x", xScale(lastDataPoint.date) + 2*lineOffsetMargin + lineOffset)
+                .attr("y", yPosition)
+                .style("fill", colorScale(index))
+                .attr("class", "text-xs")
+                .attr("alignment-baseline", "middle")
+                .text(s.name);
+        
+    placedLabels.push(yPosition); // Store the position of this label
     });
+
+    // Place label groups
+    const labels = svg.selectAll(".series-label")
+        .data(series)
+        .enter().append("text")
+        .attr("class", "series-label font-poppins text-xs")
+        .attr("x", width + 10) // Some margin from the right end of the plot
+        .attr("y", (d, i) => adjustedLabelPositions[i])
+        .text(d => d.name); 
 
     // Create invisible circles for each tooltip DOESN'T WORK YET
     series.forEach((s, index) => {
@@ -146,3 +257,19 @@ function drawChart(data, series) {
             .text(s.name)
     });
 }
+
+// Utility function to check if a y-position is overlapping with already placed labels
+ function isOverlapping(yPosition, placedLabels, spacing) {
+    for(let i = 0; i < placedLabels.length; i++) {
+        if(Math.abs(yPosition - placedLabels[i]) < spacing) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Redo isOverlapping to try grouping method
+//function isOverlapping(y1, y2) {
+ //   const gap = 15; // Some arbitrary constant to define if labels are overlapping
+  //  return Math.abs(y1 - y2) < gap;
+//}
