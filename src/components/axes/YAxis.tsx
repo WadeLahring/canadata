@@ -8,6 +8,7 @@ interface YAxisProps {
 }
 
 const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, onWidthChange }) => {
+    
     const yAxisRef = useRef<SVGGElement>(null);
 
     useEffect(() => {
@@ -26,7 +27,7 @@ const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, onWidthChange }) => {
         })
 
         // Set the margin based on the width of the widest label
-        onWidthChange(widestLabel + 25); // 25 is an arbitraty valeuw that seems to give about the right amount of padding.
+        onWidthChange(widestLabel + 25); // 25 is an arbitraty valeu that seems to give about the right amount of padding.
 
         // Remove the domain line
         d3.select(yAxisRef.current).select('.domain').remove();
