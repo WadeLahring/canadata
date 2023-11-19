@@ -1,13 +1,13 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
 interface YAxisProps {
     yScale: d3.ScaleLinear<number, number>;
     innerWidth: number;
-    setLeftMargin: (margin: number) => void;
+    setMaxLabelWidth: (margin: number) => void;
 }
 
-const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, setLeftMargin }) => {
+const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, setMaxLabelWidth }) => {
     const yAxisRef = useRef<SVGGElement>(null);
 
     useEffect(() => {
@@ -18,19 +18,17 @@ const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, setLeftMargin }) => {
 
         // Find the width of the widest label
         let maxLabelWidth = 0;
-        d3.select(yAxisRef.current).selectAll('.tick text').each(function() {
-            if (this) {
+        d3.select(yAxisRef.current).selectAll('.tick text').each(function() {        
                 const textElement = this as SVGTextElement;
 
                 const labelWidth = textElement.getBBox().width;
                 if (labelWidth > maxLabelWidth) {
                     maxLabelWidth = labelWidth;
-                }
-            };
+                };
         });    
             
         // Set the left margin based on the width of the widest label
-        setLeftMargin(maxLabelWidth + 20);
+        setMaxLabelWidth(maxLabelWidth); // 36 is an arbitrary value that just seems to give a straight left edge.
 
         // Remove the domain line
         d3.select(yAxisRef.current).select('.domain').remove();
@@ -48,7 +46,7 @@ const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, setLeftMargin }) => {
         d3.select(yAxisRef.current).selectAll('.tick text')
             .attr("class", "font-poppins text-slate-600 text-xs");
 
-    }, [yScale, innerWidth, setLeftMargin]);
+    }, [yScale, innerWidth, setMaxLabelWidth]);
 
     return <g ref={yAxisRef} />;
 };

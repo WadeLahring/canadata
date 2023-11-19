@@ -13,8 +13,9 @@ const XAxis: React.FC<XAxisProps> = ({ xScale, translate }) => {
         // Clear anything that exists previously
         d3.select(xAxisRef.current).selectAll("*").remove();
 
-        // Generate the xAxis
         const xAxis = d3.axisBottom(xScale);
+        
+        // Generate the xAxis
         d3.select(xAxisRef.current).call(xAxis as any);
 
         // Start-align the first tick mark label on bottom axis
