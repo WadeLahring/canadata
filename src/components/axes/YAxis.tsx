@@ -4,31 +4,29 @@ import * as d3 from 'd3';
 interface YAxisProps {
     yScale: d3.ScaleLinear<number, number>;
     innerWidth: number;
-    setMaxLabelWidth: (margin: number) => void;
+    onWidthChange: (value: number) => void;
 }
 
-const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, setMaxLabelWidth }) => {
+const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, onWidthChange }) => {
     const yAxisRef = useRef<SVGGElement>(null);
 
     useEffect(() => {
-       
         // Generate the yAxis
         const yAxis = d3.axisLeft(yScale);
         d3.select(yAxisRef.current).call(yAxis as any);
 
-        // Find the width of the widest label
-        let maxLabelWidth = 0;
-        d3.select(yAxisRef.current).selectAll('.tick text').each(function() {        
-                const textElement = this as SVGTextElement;
-
+        // Measure the width of the widest label
+        let widestLabel = 0;
+        d3.select(yAxisRef.current).selectAll('.tick text').each(function () {
+            const textElement = this as SVGGraphicsElement;
+            if (this) {
                 const labelWidth = textElement.getBBox().width;
-                if (labelWidth > maxLabelWidth) {
-                    maxLabelWidth = labelWidth;
-                };
-        });    
-            
-        // Set the left margin based on the width of the widest label
-        setMaxLabelWidth(maxLabelWidth); // 36 is an arbitrary value that just seems to give a straight left edge.
+                if (labelWidth > widestLabel) widestLabel = labelWidth;
+            ;}
+        })
+
+        // Set the margin based on the width of the widest label
+        onWidthChange(widestLabel + 25); // 25 is an arbitraty valeuw that seems to give about the right amount of padding.
 
         // Remove the domain line
         d3.select(yAxisRef.current).select('.domain').remove();
@@ -46,7 +44,7 @@ const YAxis: React.FC<YAxisProps> = ({ yScale, innerWidth, setMaxLabelWidth }) =
         d3.select(yAxisRef.current).selectAll('.tick text')
             .attr("class", "font-poppins text-slate-600 text-xs");
 
-    }, [yScale, innerWidth, setMaxLabelWidth]);
+    }, [yScale, innerWidth, onWidthChange]);
 
     return <g ref={yAxisRef} />;
 };

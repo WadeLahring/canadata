@@ -24,12 +24,18 @@ const LineChart: React.FC<LineChartProps> = ({
     subtitle,
     source,
     source_link,
-    margin = { top: 30, right: 16, bottom: 30, left: 40 } 
+    margin = { top: 30, right: 16, bottom: 30, left: 0 } 
 }) => {
-    
-    // Set the left margin. Draws chart twice, first with default margin, then again with margin based on widest label
-    const [leftMargin, setLeftMargin] = useState(40);
-    
+    // Set the detault state to be 0
+    const [leftMargin, setLeftMargin] = useState(0);
+    margin.left = leftMargin
+
+    // Update the margin based on the child width (logic goes here())
+    const handleLeftMarginChange = (childWidth: number) => {
+        const newLeftMargin = childWidth;
+        setLeftMargin(newLeftMargin);
+    }
+
     // Set up the chart
     const ref = useRef<SVGSVGElement>(null);
     const innerWidth = width - margin.left - margin.right;
@@ -49,12 +55,12 @@ const LineChart: React.FC<LineChartProps> = ({
         .range([innerHeight, 0]);
 
     // Adjust left margin
-    const handleMaxLabelWidth = (maxLabelWidth: number) => {
-        const newMargin = maxLabelWidth + 200;
-        if (newMargin !== leftMargin) {
-            setLeftMargin(newMargin);
-        }
-    }; 
+    //const handleMaxLabelWidth = (maxLabelWidth: number) => {
+    //    const newMargin = maxLabelWidth + 200;
+    //    if (newMargin !== leftMargin) {
+    //        setLeftMargin(newMargin);
+    //    }
+    //}; 
 
     // Draw the chart
     const drawChart = () => {
@@ -95,7 +101,7 @@ const LineChart: React.FC<LineChartProps> = ({
             <svg ref={ref} width={width} height={height} >
                 <g transform={`translate(${margin.left},${margin.top})`}>
                     <XAxis xScale={xScale} translate={`translate(0, ${innerHeight})`} />
-                    <YAxis yScale={yScale} innerWidth={innerWidth} setMaxLabelWidth={handleMaxLabelWidth} />
+                    <YAxis yScale={yScale} innerWidth={innerWidth} onWidthChange={handleLeftMarginChange} />
                     <g className="line-chart-area"></g>
                 </g>
             </svg>
